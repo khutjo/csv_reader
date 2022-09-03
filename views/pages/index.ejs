@@ -13,10 +13,6 @@
 <center>
 
     <main>
-        <div class="jumbotron">
-          <h1>Welcome to GFG</h1>
-          <h2>How to upload files using HTML to website?</h2>
-        </div>
         <form action="upload" method="post" enctype="multipart/form-data">
             <input type="file" name="avatar" accept=".csv">
             <input type="submit" value="Submit">
@@ -27,12 +23,15 @@
 
         <ul>
           <% files.forEach(function(data) { %>
-            <li>
-              <strong> filename <%= data.filename %></strong>
-              fileid <%= data.fileid %>
-            </li>
+            <a href="/read/?file=<%= data.fileid %>" >
+                <li>
+                <strong> filename <%= data.filename %></strong>
+                </li>
+            </a>
           <% }); %>
         </ul>
+
+        
     </main>
 
 </form> 

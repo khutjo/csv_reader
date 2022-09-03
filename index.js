@@ -24,11 +24,12 @@ app.use(fileUpload({
 }));
 
 
+
 app.get('/',function(req,res){  
     fs.readFile("./uploads/uploadregister.txt", "utf8", (err, data) => 
     {
         if (err) {
-            res.render('pages/index', {files: null, size: 0});
+            res.render('views/pages/index', {files: null, size: 0});
             return
         }
         let files = []
@@ -36,12 +37,48 @@ app.get('/',function(req,res){
         let size = data.length
         data.forEach(line => {
             let linepart = line.split(",")
-            files.push({ filename: linepart[0], fileid: linepart[1]})
+            files.push({ filename: linepart[0], fileid: encodeURI(linepart[1])})
         })
         res.render('views/pages/index', {files: files,size: size});
      });
 });
 
+
+app.get('/read', async (req, res) => {
+    fs.readFile("./uploads/uploadregister.txt", "utf8", (err, data) => 
+    {
+        if (err) {
+            res.render('iews/pages/index', {files: null, size: 0});
+            return
+        }
+        data = data.trim().split("\r\n");
+        data.forEach(line => {
+            let linepart = line.split(",")
+            if (linepart[1] == req.query.file)
+            fs.readFile("./uploads/"+linepart[1], "utf8", (err, csvdata) => 
+            {
+                // let csvlines = csvdata.trim().split("\r\n");
+                let filedata = []
+                let skip = true
+                    csvdata.trim().split("\r\n").forEach(csvlines => {
+                        if (!skip){
+                              
+                        let csvline = csvlines.split(";")
+                        filedata.push({StudentNumber: csvline[0],
+                        Firstname: csvline[1],
+                        Surname: csvline[2],
+                        CourseCode: csvline[3],
+                        CourseDescription: csvline[4],
+                        Grade: csvline[5]})
+                        }else
+                            skip = false
+
+                    })
+                    return res.render('views/pages/readcsv', {filedata: filedata, filename: linepart[0]});
+                });
+        })
+    });
+});
 
 app.post('/upload', async (req, res) => {
     try {
@@ -55,24 +92,14 @@ app.post('/upload', async (req, res) => {
             let avatar = req.files.avatar;
             
             //Use the mv() method to place the file in upload directory (i.e. "uploads")
-            avatar.mv('./uploads/' + avatar.name);
-            fs.appendFile('./uploads/uploadregister.txt', avatar.name+","+Date.now(), function (err) {
-                if (err) {return res.send({
-                    status: false,
-                    message: 'No file uploaded'
-                });}
-                res.send({
-                    status: true,
-                    message: 'File is uploaded',
-                    data: {
-                        name: avatar.name,
-                        mimetype: avatar.mimetype,
-                        size: avatar.size
-                    }
-                });
-              });
-
-            
+            let filename = parseInt(Math.random(Date.now()))+Date.now()
+            avatar.mv('./uploads/' + filename);
+            fs.appendFile('./uploads/uploadregister.txt', avatar.name+","+filename+"\r\n", function (err) {
+                if (err) {
+                    res.status(500).send(err);
+                }else
+                    res.redirect(301, "/");
+              });           
         }
     } catch (err) {
         res.status(500).send(err);

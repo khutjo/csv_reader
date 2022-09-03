@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <%- include('../partials/head'); %>
+</head>
+  
+<body>
+
+    <%- include('../partials/header'); %>
+
+
+<center>
+
+    <main>
+        <div >
+          <h1> <%= filename %></h1>
+        </div>
+        <table>
+          <tr>
+            <th>Student Number</th>
+            <th>Firstname</th>
+            <th>Surname</th>
+            <th>Course Code</th>
+            <th>Course Description</th>
+            <th>Grade</th>
+          </tr>
+          <% filedata.forEach(function(data) { %>
+          <tr>
+            <td><%= data.StudentNumber %></td>
+            <td><%= data.Firstname %></td>
+            <td><%= data.Surname %></td>
+            <td><%= data.CourseCode %></td>
+            <td><%= data.CourseDescription %></td>
+            <td><%= data.Grade %></td>
+          </tr>
+          <% }); %>
+        </table>
+
+    </main>
+
+</form> 
+</center>
+
+
+
+</body>
+</html>
+
+
