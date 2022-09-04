@@ -4,8 +4,9 @@
 <head>
     <%- include('../partials/head'); %>
 </head>
-  
+
 <body>
+
 <header>
     <%- include('../partials/header'); %>
 </header>
@@ -14,21 +15,26 @@
 
     <main>
         <form action="upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="avatar" accept=".csv">
+            <input type="file" name="csv" accept=".csv">
             <input type="submit" value="Submit">
-        </form> 
-
-
-        <p><%= size %></p>
-
+        </form>
         <ul>
-          <% files.forEach(function(data) { %>
-            <a href="/read/?file=<%= data.fileid %>" >
-                <li>
-                <strong> filename <%= data.filename %></strong>
-                </li>
-            </a>
-          <% }); %>
+            <% if (size > 0){ let i = 1;%>
+            <table>
+                <tr>
+                    <th></th>
+                    <th>File Name</th>
+                </tr>
+                <% files.forEach(function(data) { %>
+                <tr>
+                    <td>  <%= i %></td>
+                    <td><a href="/read/?file=<%= data.fileid %>" ><strong><%= data.filename %></strong></a></td>
+                </tr>
+                <% i++ }); %>
+              </table>
+          <% }else{  %>
+            <strong> No Files To Read</strong>
+            <% } %>
         </ul>
 
         
@@ -36,9 +42,13 @@
 
 </form> 
 </center>
+<% if(showalert) { %>
+<script type="text/javascript">
+        alert("<%= results %>");  
 
-
-
+   window.location.href = "/";
+</script>
+<% } %>
 </body>
 </html>
 
