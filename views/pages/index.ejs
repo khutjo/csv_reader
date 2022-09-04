@@ -24,11 +24,13 @@
                 <tr>
                     <th></th>
                     <th>File Name</th>
+                    <th>Timestamp</th>
                 </tr>
                 <% files.forEach(function(data) { %>
                 <tr>
                     <td>  <%= i %></td>
                     <td><a href="/read/?file=<%= data.fileid %>" ><strong><%= data.filename %></strong></a></td>
+                    <td>  <%= data.timestamp %></td>
                 </tr>
                 <% i++ }); %>
               </table>

@@ -7,7 +7,7 @@ const morgan = require('morgan');
 const _ = require('lodash');
 const fs = require('fs')
 const port = process.env.PORT || 3000
-var path = require('path'); 
+var path = require('path');
 
 
 var app   = require('express')();  
@@ -27,13 +27,12 @@ app.use(fileUpload({
 
 app.get('/',function(req,res){
     if (req.query && req.query.alert){
-        res.render('views/pages/index', {files: null,size: 0, showalert: true , results: req.query.alert });
+        return res.render('views/pages/index', {files: null,size: 0, showalert: true , results: req.query.alert });
     }
     fs.readFile("./uploads/uploadregister.txt", "utf8", (err, data) => 
     {
         if (err) {
-            res.render('views/pages/index', {files: null, size: 0, showalert: true , results: "Error Retrieving List"});
-            return
+            return res.render('views/pages/index', {files: null, size: 0, showalert: true , results: "Error Retrieving List"});
         }
         let files = []
         data = data.trim().split("\r\n");
@@ -41,7 +40,7 @@ app.get('/',function(req,res){
         data.forEach(line => {
             let linepart = line.split(",")
             if (linepart[0].length > 0){
-                files.push({ filename: linepart[0], fileid: encodeURI(linepart[1])})
+                files.push({ filename: linepart[0], timestamp: linepart[1], fileid: encodeURI(linepart[2])})
                 size++
             }
         })
@@ -55,66 +54,91 @@ app.get('/read', async (req, res) => {
         fs.readFile("./uploads/uploadregister.txt", "utf8", (err, data) => 
         {
             if (err) {
-                res.redirect(301, "/?alert=" + encodeURIComponent("error loading csv"));
-                return
+                return res.redirect(301, "/?alert=" + encodeURIComponent("error loading csv"));
             }
             data = data.trim().split("\r\n");
+            let found = false
             data.forEach(line => {
                 let linepart = line.split(",")
-                if (linepart[1] == req.query.file)
-                fs.readFile("./uploads/"+linepart[1], "utf8", (err, csvdata) => {
-                    if (err) {
-                        res.redirect(301, "/?alert=" + encodeURIComponent("error loading csv"));
-                        return
-                    }
-                    let filedata = []
-                    let skip = true
-                    try {
-                        csvdata.trim().split("\r\n").forEach(csvlines => {
-                            if (!skip){
-                                
-                            let csvline = csvlines.split(";")
-                            filedata.push({StudentNumber: csvline[0],
-                            Firstname: csvline[1],
-                            Surname: csvline[2],
-                            CourseCode: csvline[3],
-                            CourseDescription: csvline[4],
-                            Grade: csvline[5]})
-                            }else
-                                skip = false
+                if (linepart[2] == req.query.file){
+                    found = true
+                    fs.readFile("./uploads/"+linepart[2], "utf8", (err, csvdata) => {
+                        if (err) {
+                            return res.redirect(301, "/?alert=" + encodeURIComponent("error loading csv"));
+                        }
+                        let filedata = []
+                        let skip = true
+                        try {
+                            csvdata.trim().split("\r\n").forEach(csvlines => {
+                                if (!skip){
+                                    
+                                let csvline = csvlines.split(";")
+                                filedata.push({StudentNumber: csvline[0],
+                                Firstname: csvline[1],
+                                Surname: csvline[2],
+                                CourseCode: csvline[3],
+                                CourseDescription: csvline[4],
+                                Grade: csvline[5]})
+                                }else
+                                    skip = false
 
-                        })
-                        return res.render('views/pages/readcsv', {filedata: filedata, filename: linepart[0]});
-                    }catch (err) {
-                        res.redirect(301, "/?alert=" + encodeURIComponent("error loading csv"));
-                    }
-                });
+                            })
+                            return res.render('views/pages/readcsv', {filedata: filedata, filename: linepart[0]});
+                        }catch (err) {
+                            return res.redirect(301, "/?alert=" + encodeURIComponent("error loading csv"));
+                        }
+                    });
+                }
             })
+            if (!found){
+                return res.redirect(301, "/?alert=" + encodeURIComponent("error file not found"));
+            }
         });
     }
      catch (err) {
-        res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
+        return res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
     }
 });
+
+function padding(num){
+    strnum = num.toString(10)
+    if (strnum.length == 1)
+        strnum = "0"+strnum
+    return strnum
+}
+
+function gettimestamp(){
+    var months = [ "January", "February", "March", "April", "May", "June", 
+           "July", "August", "September", "October", "November", "December" ];
+
+    const date = new Date();
+    const year = date.getFullYear();
+    const month = months[date.getMonth()];
+    const day = date.getDate();
+    const hour = padding(date.getHours());
+    const minute = padding(date.getMinutes());
+    const second = padding(date.getSeconds());
+    return day +" "+ month+" "+ year +" "+hour+":"+minute+":"+second
+}
 
 app.post('/upload', async (req, res) => {
     try {
         if(!req.files) {
-            res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
+            return res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
         } else {
             let csv = req.files.csv;
             
             let filename = parseInt(Math.random(Date.now()))+Date.now()
-            csv.mv('./uploads/' + filename);
-            fs.appendFile('./uploads/uploadregister.txt', csv.name+","+filename+"\r\n", function (err) {
+            fs.appendFile('./uploads/uploadregister.txt', csv.name+","+gettimestamp()+","+filename+"\r\n", function (err) {
                 if (err) {
-                    res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
+                    return res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
                 }else
-                    res.redirect(301, "/?alert=" + encodeURIComponent("File Uploaded Successfully"));
-              });           
+                    return res.redirect(301, "/?alert=" + encodeURIComponent("File Uploaded Successfully"));
+            });
+            csv.mv('./uploads/' + filename);    
         }
     } catch (err) {
-        res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
+        return res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
     }
 });
 
