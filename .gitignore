@@ -105,4 +105,6 @@ dist
 
 
 # ignore uploads file
-uploads
+uploads/*
+
+packages-lock.json
