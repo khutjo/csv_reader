@@ -8,7 +8,7 @@ const _ = require('lodash');
 const fs = require('fs')
 const port = process.env.PORT || 3000
 var path = require('path');
-
+const timestamp = require("./src/timestamp");
 
 var app   = require('express')();  
 app.use(cors());
@@ -100,26 +100,7 @@ app.get('/read', async (req, res) => {
     }
 });
 
-function padding(num){
-    strnum = num.toString(10)
-    if (strnum.length == 1)
-        strnum = "0"+strnum
-    return strnum
-}
 
-function gettimestamp(){
-    var months = [ "January", "February", "March", "April", "May", "June", 
-           "July", "August", "September", "October", "November", "December" ];
-
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = months[date.getMonth()];
-    const day = date.getDate();
-    const hour = padding(date.getHours());
-    const minute = padding(date.getMinutes());
-    const second = padding(date.getSeconds());
-    return day +" "+ month+" "+ year +" "+hour+":"+minute+":"+second
-}
 
 app.post('/upload', async (req, res) => {
     try {
@@ -129,7 +110,7 @@ app.post('/upload', async (req, res) => {
             let csv = req.files.csv;
             
             let filename = parseInt(Math.random(Date.now()))+Date.now()
-            fs.appendFile('./uploads/uploadregister.txt', csv.name+","+gettimestamp()+","+filename+"\r\n", function (err) {
+            fs.appendFile('./uploads/uploadregister.txt', csv.name+","+timestamp.gettimestamp()+","+filename+"\r\n", function (err) {
                 if (err) {
                     return res.redirect(301, "/?alert=" + encodeURIComponent("error uploading file"));
                 }else
